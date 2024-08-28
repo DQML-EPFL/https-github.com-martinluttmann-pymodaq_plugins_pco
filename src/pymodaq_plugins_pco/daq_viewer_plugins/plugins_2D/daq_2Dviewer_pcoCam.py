@@ -89,7 +89,7 @@ class DAQ_2DViewer_pcoCam(DAQ_Viewer_base):
         #data_x_axis = self.controller.your_method_to_get_the_x_axis()  # if possible
 
         PixNbr = self.settings.child('PixNbr').value()
-        PixSize = self.settings.child('PixSize').value()*1e-3 #in mm
+        PixSize = self.settings.child('PixSize').value()*1e3 #in mm
 
         data_x_axis = np.linspace(-int(PixNbr/2)*PixSize ,int(PixNbr/2-1)*PixSize,PixNbr)
         self.x_axis = Axis(data=data_x_axis, label='', units='', index=1)
@@ -131,7 +131,7 @@ class DAQ_2DViewer_pcoCam(DAQ_Viewer_base):
         """
         ## TODO for your custom plugin: you should choose EITHER the synchrone or the asynchrone version following
         PixNbr = self.settings.child('PixNbr').value()
-        PixSize = self.settings.child('PixSize').value()*1e-3 #in mm
+        PixSize = self.settings.child('PixSize').value()*1e3 #in mm
 
         data_x_axis = np.linspace(-int(PixNbr/2)*PixSize ,int(PixNbr/2-1)*PixSize,PixNbr)
         self.x_axis = Axis(data=data_x_axis, label='', units='', index=1)
