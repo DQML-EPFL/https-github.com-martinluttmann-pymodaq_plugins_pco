@@ -28,6 +28,16 @@ class DAQ_2DViewer_pcoCam(DAQ_Viewer_base):
          'min': 1,
          'max': 10000, 'subtype': 'linear'},
 
+        {'title': 'Pixel nbr:',
+         'name': 'PixNbr',
+         'type': 'int',
+         'value': 2048, 'default': 2048},
+
+        {'title': 'Pixel size (µm):',
+         'name': 'PixSize',
+         'type': 'float',
+         'value': 6.5, 'default': 6.5},
+
     #add ROI and other parameters
 
     ]
@@ -78,18 +88,21 @@ class DAQ_2DViewer_pcoCam(DAQ_Viewer_base):
         # get the x_axis (you may want to to this also in the commit settings if x_axis may have changed
         #data_x_axis = self.controller.your_method_to_get_the_x_axis()  # if possible
 
+        PixNbr = self.settings.child('PixNbr').value()
+        PixSize = self.settings.child('PixSize').value()*1e-3 #in mm
 
-        data_x_axis = np.linspace(0,2047,2048)
+        data_x_axis = np.linspace(-int(PixNbr/2)*PixSize ,int(PixNbr/2-1)*PixSize,PixNbr)
         self.x_axis = Axis(data=data_x_axis, label='', units='', index=1)
 
         # get the y_axis (you may want to to this also in the commit settings if y_axis may have changed
         #data_y_axis = self.controller.your_method_to_get_the_y_axis()  # if possible
-        data_y_axis = np.linspace(0, 2047, 2048)
+
+        data_y_axis = np.linspace(-int(PixNbr/2)*PixSize, int(PixNbr/2-1)*PixSize,PixNbr)
         self.y_axis = Axis(data=data_y_axis, label='', units='', index=0)
 
         ## TODO for your custom plugin. Initialize viewers pannel with the future type of data
         self.dte_signal_temp.emit(DataToExport('myplugin',
-                                               data=[DataFromPlugins(name='Cam', data=[np.zeros((2048,2048))],
+                                               data=[DataFromPlugins(name='Cam', data=[np.zeros((PixNbr,PixNbr))],
                                                                      dim='Data2D', labels=['dat0'],
                                                                      axes=[self.x_axis, self.y_axis]), ]))
 
@@ -117,6 +130,19 @@ class DAQ_2DViewer_pcoCam(DAQ_Viewer_base):
             others optionals arguments
         """
         ## TODO for your custom plugin: you should choose EITHER the synchrone or the asynchrone version following
+        PixNbr = self.settings.child('PixNbr').value()
+        PixSize = self.settings.child('PixSize').value()*1e-3 #in mm
+
+        data_x_axis = np.linspace(-int(PixNbr/2)*PixSize ,int(PixNbr/2-1)*PixSize,PixNbr)
+        self.x_axis = Axis(data=data_x_axis, label='', units='', index=1)
+
+        # get the y_axis (you may want to to this also in the commit settings if y_axis may have changed
+        #data_y_axis = self.controller.your_method_to_get_the_y_axis()  # if possible
+
+        data_y_axis = np.linspace(-int(PixNbr/2)*PixSize, int(PixNbr/2-1)*PixSize,PixNbr)
+        self.y_axis = Axis(data=data_y_axis, label='', units='', index=0)
+
+
 
         ##synchrone version (blocking function)
         self.controller.record()
