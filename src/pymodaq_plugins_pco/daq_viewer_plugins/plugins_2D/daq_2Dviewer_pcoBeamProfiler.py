@@ -20,7 +20,17 @@ class DAQ_2DViewer_pcoBeamProfiler(DAQ_2DViewer_pcoCam):
 
     def grab_data(self, Naverage=1, **kwargs):
 
+        PixNbr = self.settings.child('PixNbr').value()
+        PixSize = self.settings.child('PixSize').value()*1e3 #in mm
 
+        data_x_axis = np.linspace(-int(PixNbr/2)*PixSize ,int(PixNbr/2-1)*PixSize,PixNbr)
+        self.x_axis = Axis(data=data_x_axis, label='', units='', index=1)
+
+        # get the y_axis (you may want to to this also in the commit settings if y_axis may have changed
+        #data_y_axis = self.controller.your_method_to_get_the_y_axis()  # if possible
+
+        data_y_axis = np.linspace(-int(PixNbr/2)*PixSize, int(PixNbr/2-1)*PixSize,PixNbr)
+        self.y_axis = Axis(data=data_y_axis, label='', units='', index=0)
         self.controller.record()
         data_array = self.controller.image()[0]
 
