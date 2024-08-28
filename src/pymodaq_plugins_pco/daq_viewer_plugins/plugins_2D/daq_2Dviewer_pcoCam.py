@@ -3,10 +3,8 @@ from pymodaq.utils.data import DataFromPlugins, Axis, DataToExport
 from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, comon_parameters, main
 from pymodaq.utils.parameter import Parameter
 
-
-class PythonWrapperOfYourInstrument:
-    #  TODO Replace this fake class with the import of the real python wrapper of your instrument
-    pass
+import pco
+import numpy as np
 
 # TODO:
 # (1) change the name of the following class to DAQ_2DViewer_TheNameOfYourChoice
@@ -14,38 +12,30 @@ class PythonWrapperOfYourInstrument:
 #     for the class name and the file name.)
 # (3) this file should then be put into the right folder, namely IN THE FOLDER OF THE PLUGIN YOU ARE DEVELOPING:
 #     pymodaq_plugins_my_plugin/daq_viewer_plugins/plugins_2D
-class DAQ_2DViewer_Template(DAQ_Viewer_base):
-    """ Instrument plugin class for a 2D viewer.
-    
-    This object inherits all functionalities to communicate with PyMoDAQ’s DAQ_Viewer module through inheritance via
-    DAQ_Viewer_base. It makes a bridge between the DAQ_Viewer module and the Python wrapper of a particular instrument.
+class DAQ_2DViewer_pcoCam(DAQ_Viewer_base):
 
-    TODO Complete the docstring of your plugin with:
-        * The set of instruments that should be compatible with this instrument plugin.
-        * With which instrument it has actually been tested.
-        * The version of PyMoDAQ during the test.
-        * The version of the operating system.
-        * Installation instructions: what manufacturer’s drivers should be installed to make it run?
 
-    Attributes:
-    -----------
-    controller: object
-        The particular object that allow the communication with the hardware, in general a python wrapper around the
-         hardware library.
-         
-    # TODO add your particular attributes here if any
-
-    """
     params = comon_parameters + [
-        ## TODO for your custom plugin
-        # elements to be added here as dicts in order to control your custom stage
-        ############
+
+        {'title': 'Trigger mode',
+         'name': 'Trigger',
+         'type': 'itemselect',
+         'value': dict(all_items=[
+             "No trigger", "Trigger"], selected=["No trigger"])},
+
+
+        {'title': 'Exposure time (ms):', 'name': 'expTime', 'type': 'slide', 'value': 10, 'default': 10,
+         'min': 1,
+         'max': 10000, 'subtype': 'linear'},
+
+    #add ROI and other parameters
+
     ]
 
     def ini_attributes(self):
         #  TODO declare the type of the wrapper (and assign it to self.controller) you're going to use for easy
         #  autocompletion
-        self.controller: PythonWrapperOfYourInstrument = None
+        self.controller: pco.Camera() = None
 
         # TODO declare here attributes you want/need to init with a default value
 
@@ -80,24 +70,31 @@ class DAQ_2DViewer_Template(DAQ_Viewer_base):
         initialized: bool
             False if initialization failed otherwise True
         """
-        raise NotImplemented  # TODO when writing your own plugin remove this line and modify the one below
+        #raise NotImplemented  # TODO when writing your own plugin remove this line and modify the one below
         self.ini_detector_init(old_controller=controller,
-                               new_controller=PythonWrapperOfYourInstrument())
+                               new_controller=pco.Camera())
 
         ## TODO for your custom plugin
         # get the x_axis (you may want to to this also in the commit settings if x_axis may have changed
-        data_x_axis = self.controller.your_method_to_get_the_x_axis()  # if possible
+        #data_x_axis = self.controller.your_method_to_get_the_x_axis()  # if possible
+
+
+        data_x_axis = np.linspace(0,2047,2048)
         self.x_axis = Axis(data=data_x_axis, label='', units='', index=1)
 
         # get the y_axis (you may want to to this also in the commit settings if y_axis may have changed
-        data_y_axis = self.controller.your_method_to_get_the_y_axis()  # if possible
+        #data_y_axis = self.controller.your_method_to_get_the_y_axis()  # if possible
+        data_y_axis = np.linspace(0, 2047, 2048)
         self.y_axis = Axis(data=data_y_axis, label='', units='', index=0)
 
         ## TODO for your custom plugin. Initialize viewers pannel with the future type of data
         self.dte_signal_temp.emit(DataToExport('myplugin',
-                                               data=[DataFromPlugins(name='Mock1', data=["2D numpy array"],
+                                               data=[DataFromPlugins(name='Cam', data=[np.zeros((2048,2048))],
                                                                      dim='Data2D', labels=['dat0'],
                                                                      axes=[self.x_axis, self.y_axis]), ]))
+
+        self.controller.configuration = {'exposure time': 0.01}
+
 
         info = "Whatever info you want to log"
         initialized = True
@@ -105,9 +102,8 @@ class DAQ_2DViewer_Template(DAQ_Viewer_base):
 
     def close(self):
         """Terminate the communication protocol"""
-        ## TODO for your custom plugin
-        raise NotImplemented  # when writing your own plugin remove this line
-        #  self.controller.your_method_to_terminate_the_communication()  # when writing your own plugin replace this line
+
+        self.controller.close()
 
     def grab_data(self, Naverage=1, **kwargs):
         """Start a grab from the detector
@@ -123,15 +119,16 @@ class DAQ_2DViewer_Template(DAQ_Viewer_base):
         ## TODO for your custom plugin: you should choose EITHER the synchrone or the asynchrone version following
 
         ##synchrone version (blocking function)
-        data_tot = self.controller.your_method_to_start_a_grab_snap()
-        self.dte_signal.emit(DataToExport('myplugin',
-                                          data=[DataFromPlugins(name='Mock1', data=data_tot,
-                                                                dim='Data2D', labels=['label1'],
+        self.controller.record()
+        data_tot = self.controller.image()[0]
+        self.dte_signal.emit(DataToExport('pcoCam',
+                                          data=[DataFromPlugins(name='Cam', data=data_tot,
+                                                                dim='Data2D', labels=['image'],
                                                                 x_axis=self.x_axis,
                                                                 y_axis=self.y_axis), ]))
 
         ##asynchrone version (non-blocking function with callback)
-        self.controller.your_method_to_start_a_grab_snap(self.callback)
+        #self.controller.your_method_to_start_a_grab_snap(self.callback)
         #########################################################
 
     def callback(self):
@@ -144,9 +141,8 @@ class DAQ_2DViewer_Template(DAQ_Viewer_base):
                                                                 y_axis=self.y_axis), ]))
     def stop(self):
         """Stop the current grab hardware wise if necessary"""
-        ## TODO for your custom plugin
-        raise NotImplemented  # when writing your own plugin remove this line
-        self.controller.your_method_to_stop_acquisition()  # when writing your own plugin replace this line
+
+        self.controller.stop()  # when writing your own plugin replace this line
         self.emit_status(ThreadCommand('Update_Status', ['Some info you want to log']))
         ##############################
         return ''
