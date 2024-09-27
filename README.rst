@@ -25,8 +25,8 @@ Use this template to create a repository on your account and start the developme
 Authors
 =======
 
-* First Author  (myemail@xxx.org)
-* Other author (myotheremail@xxx.org)
+* martin Luttmann  (martin.luttman@epfl.ch)
+
 
 .. if needed use this field
 
