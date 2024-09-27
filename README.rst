@@ -56,7 +56,7 @@ Below is the list of instruments included in this plugin
 Viewer2D
 ++++++++
 
-pco cameras
+pco cameras, tested with PCO edge 4.2
 
 
 
